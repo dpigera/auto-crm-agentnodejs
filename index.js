@@ -8,6 +8,24 @@ import PocketBase from 'pocketbase';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import express from 'express';
+import cors from 'cors';
+
+const app = express();
+app.use(express.json());
+
+// CORS configuration
+const corsOptions = {
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4200', 'https://gauntlet-autocrm-mvp.fly.dev', 'https://gauntlet-autocrm.netlify.app'], // Added port 4200
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true // Enable if you're using cookies/sessions
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+
 // Initialize PocketBase client
 const pb = new PocketBase(process.env.POCKETBASE_URL);
 
@@ -88,9 +106,50 @@ async function summarizeTicketMessages(ticketId) {
 }
 
 // Example usage
-try {
-    const summary = await summarizeTicketMessages("c3oi15w89jl52t3");
-    console.log(summary);
-} catch (error) {
-    console.error("Error:", error);
-}
+// try {
+//     const summary = await summarizeTicketMessages("c3oi15w89jl52t3");
+//     console.log(summary);
+// } catch (error) {
+//     console.error("Error:", error);
+// }
+
+
+app.post('/summary', async (req, res) => {
+    try {
+        // Extract ticket_id from request body
+        const { ticket_id } = req.body;
+
+        if (!ticket_id) {
+            return res.status(400).json({
+                success: false,
+                error: "ticket_id is required in request body"
+            });
+        }
+
+        // Generate summary using the existing function
+        const summary = await summarizeTicketMessages(ticket_id);
+
+        // Return response with input and output
+        return res.status(200).json({
+            success: true,
+            data: {
+                input: {
+                    ticket_id: ticket_id
+                },
+                output: summary
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in /summary endpoint:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message || 'An error occurred while generating the summary'
+        });
+    }
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for chatgenius-prompt-server-project2 on 2025-01-16T06:22:20+05:30
+# fly.toml app configuration file generated for autocrm-prompt-server-project2 on 2025-01-30T16:38:50+05:30
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'chatgenius-prompt-server-project2'
+app = 'autocrm-prompt-server-project2'
 primary_region = 'dfw'
 
 [build]

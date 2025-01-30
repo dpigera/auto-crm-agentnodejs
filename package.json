@@ -13,7 +13,7 @@
     "@langchain/pinecone": "^0.0.3",
     "@pinecone-database/pinecone": "^2.0.1",
     "cors": "^2.8.5",
-    "express": "^4.18.3"
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "dotenv": "^16.4.7",
