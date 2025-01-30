@@ -1,0 +1,19 @@
+{
+  "name": "langchain-express-server",
+  "version": "1.0.0",
+  "description": "Express server for LangChain with OpenAI and Pinecone",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.30",
+    "@langchain/openai": "^0.0.14",
+    "@langchain/pinecone": "^0.0.3",
+    "@pinecone-database/pinecone": "^2.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3"
+  }
+}
