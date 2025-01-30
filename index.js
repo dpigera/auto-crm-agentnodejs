@@ -63,6 +63,23 @@ const getTicketMessagesTool = new DynamicTool({
     }
 });
 
+// First, let's create a new tool for getting ticket details
+const getTicketDetailsTool = new DynamicTool({
+    name: "get_ticket_details",
+    description: "Get detailed information about a ticket including the assignee's name",
+    func: async (ticket_id) => {
+        const ticket = await pb.collection('tickets').getOne(ticket_id, {
+            expand: 'assignee'
+        });
+        return JSON.stringify({
+            status: ticket.status,
+            title: ticket.title,
+            created: ticket.created,
+            assigneeName: ticket.expand?.assignee?.name || 'Valued Customer'
+        });
+    }
+});
+
 // Create the ChatOpenAI model instance
 const model = new ChatOpenAI({
     temperature: 0,
@@ -113,6 +130,65 @@ async function summarizeTicketMessages(ticketId) {
 //     console.error("Error:", error);
 // }
 
+
+app.post('/letter', async (req, res) => {
+    try {
+        const { ticket_id } = req.body;
+
+        if (!ticket_id) {
+            return res.status(400).json({
+                success: false,
+                error: "ticket_id is required in request body"
+            });
+        }
+
+        // Update the agent with both tools
+        const prompt = ChatPromptTemplate.fromMessages([
+            ["system", "You are a helpful AI assistant that writes personalized support ticket letters. Be warm, professional, and reference specific details from the ticket."],
+            ["human", `Please write a personalized letter about ticket ${ticket_id}. Start with "Hi [Name]," and make sure to:
+                1. Reference specific details from their ticket
+                2. Explain the current status in a friendly way
+                3. Mention that our teams are working diligently
+                4. Be empathetic and professional
+                5. End with a warm closing`],
+            new MessagesPlaceholder("agent_scratchpad"),
+        ]);
+
+        const agent = await createOpenAIFunctionsAgent({
+            llm: model,
+            tools: [getTicketMessagesTool, getTicketDetailsTool],
+            prompt: prompt
+        });
+
+        const executor = new AgentExecutor({
+            agent,
+            tools: [getTicketMessagesTool, getTicketDetailsTool],
+            verbose: true,
+            maxIterations: 3,
+        });
+
+        const result = await executor.invoke({
+            input: `Write a personalized letter for ticket ${ticket_id}`
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                input: {
+                    ticket_id
+                },
+                output: result.output
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in /letter endpoint:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message || 'An error occurred while generating the letter'
+        });
+    }
+});
 
 app.post('/summary', async (req, res) => {
     try {
